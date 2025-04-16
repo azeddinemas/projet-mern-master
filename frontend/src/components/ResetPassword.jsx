@@ -5,27 +5,54 @@ const ResetPassword = () => {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [message, setMessage] = useState('');
+    const [error, setError] = useState('');
 
-    const handleReset = (e) => {
+    const handleReset = async (e) => {
         e.preventDefault();
 
+        setMessage('');
+        setError('');
+
         if (!email) {
-            setMessage("Veuillez entrer une adresse email valide.");
+            setError("Veuillez entrer une adresse email valide.");
             return;
         }
 
         if (!password || !confirmPassword) {
-            setMessage("Veuillez remplir les deux champs de mot de passe.");
+            setError("Veuillez remplir les deux champs de mot de passe.");
             return;
         }
 
         if (password !== confirmPassword) {
-            setMessage("Les mots de passe ne correspondent pas.");
+            setError("Les mots de passe ne correspondent pas.");
             return;
         }
 
-        // Simule l'envoi du formulaire
-        setMessage(`Mot de passe réinitialisé avec succès pour ${email}.`);
+        try {
+            const response = await fetch('/reset-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: email,
+                    newPassword: password,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || "Erreur lors de la réinitialisation");
+            }
+
+            setMessage(data.message);
+            setEmail('');
+            setPassword('');
+            setConfirmPassword('');
+        } catch (err) {
+            setError(err.message);
+        }
     };
 
     return (
@@ -61,6 +88,7 @@ const ResetPassword = () => {
                 </button>
             </form>
             {message && <p className="mt-4 text-center text-sm text-green-600">{message}</p>}
+            {error && <p className="mt-4 text-center text-sm text-red-600">{error}</p>}
         </div>
     );
 };
