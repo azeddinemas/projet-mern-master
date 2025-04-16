@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+
 import api from './axiosConfig';
 import AuthForm from './components/AuthForm';
 import TaskForm from './components/TaskForm';
 import TaskList from './components/TaskList';
 import Header from './components/Header';
 import Footer from './components/Footer';
+import ResetPassword from './components/ResetPassword'; // 👈 importe la page
 import './App.css';
 
 function App() {
@@ -38,28 +41,41 @@ function App() {
     setUser(null);
   };
 
-  if (!token) {
-    return (
+  return (
+    <Router>
       <div className="min-h-screen flex flex-col bg-body-bg">
-        <Header onLogout={logout} tasks={[]} user={null} />
-        <main className="flex-grow pt-16">
-          <AuthForm setToken={setToken} setUser={setUser} />
+        <Header onLogout={logout} tasks={tasks} user={user} />
+        <main className="flex-grow pt-16 container mx-auto px-4">
+          <Routes>
+            {/* Route reset-password accessible même sans être connecté */}
+            <Route path="/reset-password" element={<ResetPassword />} />
+
+            {/* Auth route (formulaire de connexion ou inscription) */}
+            {!token && (
+              <Route path="/" element={<AuthForm setToken={setToken} setUser={setUser} />} />
+            )}
+
+            {/* Routes protégées (quand connecté) */}
+            {token && (
+              <Route
+                path="/"
+                element={
+                  <>
+                    <h1 className="text-2xl font-bold mb-4 text-header-bg">Ma To-Do List</h1>
+                    <TaskForm setTasks={setTasks} />
+                    <TaskList tasks={tasks} setTasks={setTasks} />
+                  </>
+                }
+              />
+            )}
+
+            {/* Redirection par défaut */}
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
         </main>
         <Footer />
       </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen flex flex-col bg-body-bg">
-      <Header onLogout={logout} tasks={tasks} user={user} />
-      <main className="flex-grow pt-16 container mx-auto px-4">
-        <h1 className="text-2xl font-bold mb-4 text-header-bg">Ma To-Do List</h1>
-        <TaskForm setTasks={setTasks} />
-        <TaskList tasks={tasks} setTasks={setTasks} />
-      </main>
-      <Footer />
-    </div>
+    </Router>
   );
 }
 

@@ -81,4 +81,32 @@ router.get("/me", auth, async (req, res) => {
   }
 });
 
+// Réinitialisation du mot de passe
+router.post("/reset-password", async (req, res) => {
+  const { email, newPassword } = req.body;
+
+  if (!email || !newPassword) {
+    return res.status(400).json({ message: "Email et nouveau mot de passe requis" });
+  }
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "Utilisateur non trouvé" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+
+    await user.save();
+
+    res.json({ message: "Mot de passe réinitialisé avec succès" });
+  } catch (err) {
+    console.error("Erreur lors de la réinitialisation du mot de passe :", err);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
+
 module.exports = router;
