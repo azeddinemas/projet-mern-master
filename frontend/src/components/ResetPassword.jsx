@@ -44,7 +44,7 @@ const ResetPassword = () => {
             setEmail('');
             setPassword('');
             setConfirmPassword('');
-            navigate('/')
+            navigate('/', { state: { successMessage: 'Mot de passe réinitialisé avec succès. Vous pouvez vous connecter.' } });
 
         } catch (err) {
             if (err.response && err.response.data && err.response.data.message) {

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../axiosConfig';
 
 const AuthForm = ({ setToken, setUser }) => {
@@ -7,7 +8,12 @@ const AuthForm = ({ setToken, setUser }) => {
   const [password, setPassword] = useState('');
   const [profilePicture, setProfilePicture] = useState(null);
   const [isLogin, setIsLogin] = useState(true);
-  const [showPassword, setShowPassword] = useState(false); // État pour afficher/masquer
+  const [showPassword, setShowPassword] = useState(false);
+
+  const location = useLocation();
+  const successMessage = location.state?.successMessage || '';
+
+  const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,6 +24,7 @@ const AuthForm = ({ setToken, setUser }) => {
         setToken(res.data.token);
         setUser(res.data.user);
         localStorage.setItem('token', res.data.token);
+        navigate('/', { replace: true })
       } else {
         const formData = new FormData();
         formData.append('fullName', fullName);
@@ -26,9 +33,11 @@ const AuthForm = ({ setToken, setUser }) => {
         if (profilePicture) {
           formData.append('profilePicture', profilePicture);
         }
+
         const res = await api.post('/auth/register', formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
+
         if (res.status === 201) {
           alert('Inscription réussie, connectez-vous !');
           setIsLogin(true);
@@ -36,6 +45,7 @@ const AuthForm = ({ setToken, setUser }) => {
           setEmail('');
           setPassword('');
           setProfilePicture(null);
+          navigate('/', { replace: true })
         }
       }
     } catch (err) {
@@ -47,6 +57,16 @@ const AuthForm = ({ setToken, setUser }) => {
   return (
     <div className="auth-form max-w-md mx-auto mt-8">
       <h2 className="text-2xl font-bold mb-4">{isLogin ? 'Connexion' : 'Inscription'}</h2>
+
+      {/* ✅ Message de succès après reset password */}
+      {successMessage && (
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4 text-sm">
+          <strong className="font-bold">Succès ! </strong>
+          <span className="block sm:inline">{successMessage}</span>
+        </div>
+      )}
+
+
       <form onSubmit={handleSubmit} className="space-y-4">
         {!isLogin && (
           <input
@@ -79,11 +99,10 @@ const AuthForm = ({ setToken, setUser }) => {
             onClick={() => setShowPassword(!showPassword)}
             className="absolute inset-y-0 right-0 flex items-center pr-3"
           >
-            {/* ...les icônes SVG inchangés... */}
+            {showPassword ? '🙈' : '👁️'}
           </button>
         </div>
 
-        {/*  Lien de réinitialisation du mot de passe */}
         {isLogin && (
           <div className="text-right text-sm">
             <a href="/reset-password" className="text-blue-500 hover:underline">
@@ -100,10 +119,12 @@ const AuthForm = ({ setToken, setUser }) => {
             className="file-input file-input-bordered w-full"
           />
         )}
+
         <button type="submit" className="btn btn-primary w-full">
           {isLogin ? 'Se connecter' : "S'inscrire"}
         </button>
       </form>
+
       <button
         onClick={() => setIsLogin(!isLogin)}
         className="btn btn-ghost mt-2 w-full"
@@ -111,7 +132,6 @@ const AuthForm = ({ setToken, setUser }) => {
         {isLogin ? 'Pas de compte ? Inscrivez-vous' : 'Déjà un compte ? Connectez-vous'}
       </button>
     </div>
-
   );
 };
 
