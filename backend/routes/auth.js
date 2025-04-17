@@ -95,11 +95,12 @@ router.post("/reset-password", async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "Utilisateur non trouvé" });
     }
-
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    user.password = hashedPassword;
 
-    await user.save();
+    await User.updateOne(
+      { email },
+      { $set: { password: hashedPassword } }
+    );
 
     res.json({ message: "Mot de passe réinitialisé avec succès" });
   } catch (err) {
@@ -107,6 +108,5 @@ router.post("/reset-password", async (req, res) => {
     res.status(500).json({ message: "Erreur serveur" });
   }
 });
-
 
 module.exports = router;

@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import api from '../axiosConfig';
+import { useNavigate } from 'react-router-dom';
 
 const ResetPassword = () => {
     const [email, setEmail] = useState('');
@@ -6,6 +8,8 @@ const ResetPassword = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
+
+    const navigate = useNavigate();
 
     const handleReset = async (e) => {
         e.preventDefault();
@@ -29,30 +33,27 @@ const ResetPassword = () => {
         }
 
         try {
-            const response = await fetch('/reset-password', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    email: email,
-                    newPassword: password,
-                }),
+            const response = await api.post('/auth/reset-password', {
+                email,
+                newPassword: password,
             });
 
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.message || "Erreur lors de la réinitialisation");
-            }
+            const data = response;
 
             setMessage(data.message);
             setEmail('');
             setPassword('');
             setConfirmPassword('');
+            navigate('/')
+
         } catch (err) {
-            setError(err.message);
+            if (err.response && err.response.data && err.response.data.message) {
+                setError(err.response.data.message);
+            } else {
+                setError("Erreur lors de la réinitialisation du mot de passe");
+            }
         }
+
     };
 
     return (
